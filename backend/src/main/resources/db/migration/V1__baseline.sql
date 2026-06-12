@@ -1,0 +1,2 @@
+-- Flyway baseline migration. Intentionally empty.
+-- All schema changes are introduced by subsequent migrations (V2__*, V3__*, ...).

@@ -1,0 +1,38 @@
+schema: spec-driven
+
+context: |
+  Project: Flashcard Study App — a learning project for Spring Boot, Claude Code, OpenSpec, AWS, and AI-assisted development.
+
+  Tech stack:
+    Backend:  Java 21, Spring Boot 3.4.x, Spring Security, Spring Data JPA, Flyway, PostgreSQL 16
+    Frontend: React 18, TypeScript 5 (strict), Vite 6, React Router v6
+    Database: PostgreSQL 16 (Docker Compose on port 5433 locally — avoids clash with local PG installations)
+    Build:    Maven Wrapper (./mvnw), npm
+
+  Monorepo layout:
+    /backend   — Spring Boot Maven project (package: com.flashcard)
+    /frontend  — Vite + React + TypeScript project
+    docker-compose.yml — PostgreSQL 16 on host port 5433
+
+  Security:
+    - All endpoints protected by default except GET /actuator/health
+    - JWT stored in HttpOnly cookies + CSRF header (NOT localStorage)
+    - User roles: USER | ADMIN
+    - User plans: FREE | PREMIUM
+    - AI features require PREMIUM plan or ADMIN role
+
+  AI:
+    - Pluggable AiProvider interface (change-06); first implementation: Anthropic Claude API
+    - AiUsageLog table for cost tracking and quota enforcement
+    - Quotas apply per user per month; FREE users cannot use AI features
+
+  Key decisions (do not revisit without a proposal):
+    - PostgreSQL from day 1 (not H2); Flyway migrations; ddl-auto=validate
+    - SM-2 spaced repetition; card fields (easyFactor, intervalDays, dueAt) added in change-04
+    - Pagination on all list endpoints from first use
+    - Ownership checks established in change-03 and used consistently
+
+  Roadmap (10 changes):
+    01 project-foundation (current) → 02 auth → 03 course-deck-mgmt → 04 flashcard-crud
+    → 05 study-mode-basic → 06 ai-quota-infra → 07 ai-card-generation
+    → 08 spaced-repetition → 09 pdf-import → 10 aws-deployment

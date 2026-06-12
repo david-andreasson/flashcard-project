@@ -1,0 +1,27 @@
+# Secrets — never commit
+.env
+
+# Claude Code local settings (personal permissions)
+.claude/settings.local.json
+
+# Java / Maven
+backend/target/
+backend/.mvn/repository/
+*.class
+*.jar
+!**/src/main/**/*.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+*.swp
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+
+# OS
+.DS_Store
+Thumbs.db
