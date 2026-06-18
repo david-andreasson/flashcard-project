@@ -64,22 +64,37 @@ User
   plan: FREE | PREMIUM
 
 Course          ← "Biology 101"
-  id, userId (owner), title
+  id, ownerId, title
+  visibility: PUBLIC | PRIVATE        ← PUBLIC = readable by everyone (e.g. ~10 official courses)
 
 Deck            ← "Chapter 3 vocab"
-  id, courseId, title
+  id, courseId, title                 ← inherits its course's visibility
 
-Card
+Card            ← shared CONTENT only (one row, studied by many)
   id, deckId
   front, back, notes
-  easyFactor    (SM-2, default 2.5)   ← added in change 04
-  intervalDays  (SM-2, default 1)     ← added in change 04
-  dueAt         (SM-2, nullable)      ← added in change 04
+
+UserCardState   ← per-user study progress (change 04); one row per (user, card)
+  id, userId, cardId
+  easeFactor    (SM-2, default 2.5)
+  intervalDays  (SM-2, default 1)
+  dueAt         (SM-2, nullable)
+  UNIQUE (userId, cardId)
 
 AiUsageLog      ← cost tracking
   id, userId, featureKey
   inputTokens, outputTokens, estimatedCostUsd
 ```
+
+**Why study state is separate from the card:** courses can be PUBLIC and studied by many
+users at once. SM-2 progress (ease/interval/due) is therefore *per user*, so it cannot live
+on the shared `Card` row — it lives in `UserCardState`, keyed by `(userId, cardId)`. The
+card holds content; each user has their own schedule for it.
+
+**Ownership rule (established change 03):**
+- READ a course/deck if `ownerId = me` **OR** `visibility = PUBLIC`
+- WRITE (edit/delete) only if `ownerId = me` (or ADMIN)
+- Enforced via ownership-scoped repository queries; not-owned → 404 (does not reveal existence)
 
 ---
 
@@ -105,7 +120,8 @@ Token counts from `AiResponse` flow directly into `AiUsageLog` for quota enforce
 
 | Pattern | Established in | Why it must be early |
 |---|---|---|
-| Ownership checks on all data endpoints | change 03 | Retrofitting is error-prone and creates security gaps |
+| Ownership checks on all data endpoints (read = owned-or-public, write = owned) | change 03 | Retrofitting is error-prone and creates security gaps |
+| Course `visibility` (PUBLIC/PRIVATE) | change 03 | Public/shared courses change every ownership query; adding later is a wide refactor |
 | Pagination on all list endpoints | change 03 | Adding later is a breaking API change |
-| SM-2 fields on Card entity | change 04 | Schema migration + data backfill if added later |
+| Study state per-user in `UserCardState`, not on `Card` | change 04 | Shared/public decks need per-user SM-2 progress; moving it off the card later = migration + backfill |
 | AI quota infrastructure before any AI feature | change 06 | No AI feature ships without cost protection in place |
