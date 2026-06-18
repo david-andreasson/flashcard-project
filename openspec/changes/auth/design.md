@@ -52,8 +52,12 @@ SameSite=Strict` (Lax acceptable if a cross-site redirect flow is ever needed).
 **Alternative**: Access token in memory (JS), refresh in cookie.
 
 Keeping both out of JavaScript reach eliminates token theft via XSS. The refresh cookie is
-scoped to the `/api/auth/refresh` path so it is only sent when needed. `Secure` is enforced
-in production; for local HTTP dev a profile flag relaxes it.
+scoped to the `/api/auth` path so it is only sent to auth endpoints (refresh + logout), not
+on every API call. `SameSite=Lax` is used (the design's allowed alternative to Strict);
+combined with the CSRF double-submit token it blocks cross-site forgery. The `Secure` flag is
+driven by `app.cookie.secure`, an env-overridable property that defaults to `false` so
+cookies transmit over `http://localhost` in dev (consistent with change 01's "local
+defaults that just work" principle); production sets `APP_COOKIE_SECURE=true`.
 
 ### D3 — CSRF via double-submit cookie pattern
 
@@ -64,7 +68,10 @@ cookie; the frontend echoes it in an `X-XSRF-TOKEN` header on state-changing req
 Because auth tokens live in cookies, the browser auto-attaches them to every request,
 which reopens CSRF risk. The double-submit pattern closes it: an attacker's cross-site
 request carries the cookie but cannot read it to set the matching header. `GET` requests
-are exempt; `POST/PUT/PATCH/DELETE` require the header.
+are exempt; `POST/PUT/PATCH/DELETE` require the header. A `CsrfCookieFilter` materializes
+the token each request so the cookie is emitted to the SPA, and the cookie path is set to
+`/` (not the `/api` context path) so JavaScript served from `/` can read it via
+`document.cookie`.
 
 ### D4 — BCrypt password hashing
 
@@ -114,8 +121,8 @@ acceptable; for immediate effect a user's refresh token can be revoked.
   hardening change. BCrypt's cost slows attempts somewhat.
 - [SameSite=Strict may break future cross-site embeds] → Not a concern for a standalone
   SPA; revisit only if embedding is ever needed.
-- [Local HTTP dev vs Secure cookies] → A dev profile relaxes the `Secure` flag so cookies
-  work over `http://localhost`. Production always sets `Secure`.
+- [Local HTTP dev vs Secure cookies] → `app.cookie.secure` defaults to `false` so cookies
+  work over `http://localhost`. Production sets `APP_COOKIE_SECURE=true`.
 - [Clock skew on JWT exp] → Use a small leeway (e.g. 30s) when validating expiry.
 
 ## Migration Plan
