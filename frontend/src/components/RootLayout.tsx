@@ -1,4 +1,4 @@
-import { Outlet, useNavigate } from 'react-router-dom'
+import { Link, Outlet, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 
 export function RootLayout() {
@@ -21,7 +21,10 @@ export function RootLayout() {
           alignItems: 'center',
         }}
       >
-        <span>Flashcard App</span>
+        <span style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
+          <Link to="/" style={{ fontWeight: 600 }}>Flashcard App</Link>
+          {user && <Link to="/courses">Courses</Link>}
+        </span>
         {user && (
           <span style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
             <span style={{ color: '#666' }}>
