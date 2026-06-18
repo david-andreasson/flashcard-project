@@ -31,3 +31,17 @@ server:
   port: 8080
   servlet:
     context-path: /api
+
+# Application-specific configuration (auth)
+app:
+  # The user who registers with this email is granted ADMIN. Override per environment.
+  admin-email: ${APP_ADMIN_EMAIL:davidandreasson@live.com}
+  jwt:
+    # HS256 signing secret. MUST be overridden in production. Min 32 bytes.
+    secret: ${APP_JWT_SECRET:dev-only-insecure-secret-change-me-0123456789abcdef}
+    access-token-ttl: ${APP_JWT_ACCESS_TTL:PT15M}   # 15 minutes
+    refresh-token-ttl: ${APP_JWT_REFRESH_TTL:P7D}    # 7 days
+  cookie:
+    # false for local http dev so cookies transmit over http://localhost.
+    # Production MUST set APP_COOKIE_SECURE=true (cookies only over https).
+    secure: ${APP_COOKIE_SECURE:false}
