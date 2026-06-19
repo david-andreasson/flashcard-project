@@ -45,3 +45,19 @@ app:
     # false for local http dev so cookies transmit over http://localhost.
     # Production MUST set APP_COOKIE_SECURE=true (cookies only over https).
     secure: ${APP_COOKIE_SECURE:false}
+
+# AI cost-protection infrastructure (change 06). Mock provider by default — no API key needed.
+ai:
+  enabled: ${AI_ENABLED:true}              # global kill-switch; false -> all AI calls 503
+  provider: ${AI_PROVIDER:mock}            # mock | anthropic (anthropic added in change 07)
+  max-input-chars: ${AI_MAX_INPUT_CHARS:8000}
+  default-max-tokens: ${AI_DEFAULT_MAX_TOKENS:1024}
+  pricing:
+    # USD per token. Placeholder rates; real Anthropic prices land in change 07.
+    input-rate: ${AI_PRICE_INPUT:0.000003}
+    output-rate: ${AI_PRICE_OUTPUT:0.000015}
+  quota:
+    # Monthly token limits per plan. FREE is gated out anyway; ADMIN effectively unlimited.
+    free: ${AI_QUOTA_FREE:0}
+    premium: ${AI_QUOTA_PREMIUM:200000}
+    admin: ${AI_QUOTA_ADMIN:100000000}
