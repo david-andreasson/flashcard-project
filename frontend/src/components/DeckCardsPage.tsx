@@ -103,7 +103,16 @@ export function DeckCardsPage() {
       <h1>Cards{course.visibility === 'PUBLIC' && <span style={{ fontSize: '0.8rem', color: '#888' }}> · public</span>}</h1>
       {error && <p role="alert" style={{ color: 'crimson' }}>{error}</p>}
 
-      {cards.length === 0 && <p style={{ color: '#888' }}>No cards yet.</p>}
+      {cards.length === 0 ? (
+        <p style={{ color: '#888' }}>No cards yet.</p>
+      ) : (
+        <button
+          onClick={() => navigate(`/courses/${cId}/decks/${dId}/study`)}
+          style={{ padding: '0.5rem 1.25rem', marginBottom: '1rem' }}
+        >
+          ▶ Study this deck
+        </button>
+      )}
 
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {cards.map((card) => (
