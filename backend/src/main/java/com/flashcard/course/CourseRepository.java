@@ -27,4 +27,6 @@ public interface CourseRepository extends JpaRepository<Course, Long> {
     Page<Course> findByVisibility(Visibility visibility, Pageable pageable);
 
     boolean existsByOwnerIdAndTitle(Long ownerId, String title);
+
+    Optional<Course> findByOwnerIdAndTitle(Long ownerId, String title);
 }

@@ -10,6 +10,7 @@ import { RegisterPage } from './components/RegisterPage'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { CoursesPage } from './components/CoursesPage'
 import { CourseDetailPage } from './components/CourseDetailPage'
+import { DeckCardsPage } from './components/DeckCardsPage'
 import './style.css'
 
 const router = createBrowserRouter([
@@ -25,6 +26,7 @@ const router = createBrowserRouter([
           { index: true, element: <HomePage /> },
           { path: 'courses', element: <CoursesPage /> },
           { path: 'courses/:id', element: <CourseDetailPage /> },
+          { path: 'courses/:courseId/decks/:deckId', element: <DeckCardsPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },

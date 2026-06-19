@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import {
   createDeck,
@@ -141,7 +141,7 @@ export function CourseDetailPage() {
       <ul style={{ listStyle: 'none', padding: 0 }}>
         {decks?.content.map((deck) => (
           <li key={deck.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '0.3rem 0' }}>
-            <span style={{ flex: 1 }}>{deck.title}</span>
+            <Link to={`/courses/${courseId}/decks/${deck.id}`} style={{ flex: 1 }}>{deck.title}</Link>
             {isOwner && <button onClick={() => onRenameDeck(deck)}>Rename</button>}
             {isOwner && <button onClick={() => onDeleteDeck(deck)} style={{ color: 'crimson' }}>Delete</button>}
           </li>

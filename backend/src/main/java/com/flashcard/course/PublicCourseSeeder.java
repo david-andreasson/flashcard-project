@@ -7,6 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.ApplicationArguments;
 import org.springframework.boot.ApplicationRunner;
+import org.springframework.core.annotation.Order;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,6 +19,7 @@ import java.util.List;
  * not-yet-registered admin are both handled gracefully.
  */
 @Component
+@Order(1)
 public class PublicCourseSeeder implements ApplicationRunner {
 
     private static final Logger log = LoggerFactory.getLogger(PublicCourseSeeder.class);

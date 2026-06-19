@@ -17,6 +17,21 @@ export interface Deck {
   createdAt: string
 }
 
+export interface Card {
+  id: number
+  deckId: number
+  front: string
+  back: string
+  notes: string | null
+  createdAt: string
+}
+
+export interface CardInput {
+  front: string
+  back: string
+  notes?: string | null
+}
+
 export interface PagedResponse<T> {
   content: T[]
   page: number
@@ -79,4 +94,29 @@ export function updateDeck(courseId: number, deckId: number, title: string) {
 
 export function deleteDeck(courseId: number, deckId: number) {
   return apiFetch(`/courses/${courseId}/decks/${deckId}`, { method: 'DELETE' }).then(expectOk)
+}
+
+// ── Cards ──
+export function listCards(courseId: number, deckId: number, page = 0, size = 100) {
+  return apiFetch(`/courses/${courseId}/decks/${deckId}/cards?page=${page}&size=${size}`).then(
+    asJson<PagedResponse<Card>>,
+  )
+}
+
+export function createCard(courseId: number, deckId: number, input: CardInput) {
+  return apiFetch(`/courses/${courseId}/decks/${deckId}/cards`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  }).then(asJson<Card>)
+}
+
+export function updateCard(courseId: number, deckId: number, cardId: number, input: CardInput) {
+  return apiFetch(`/courses/${courseId}/decks/${deckId}/cards/${cardId}`, {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  }).then(asJson<Card>)
+}
+
+export function deleteCard(courseId: number, deckId: number, cardId: number) {
+  return apiFetch(`/courses/${courseId}/decks/${deckId}/cards/${cardId}`, { method: 'DELETE' }).then(expectOk)
 }
