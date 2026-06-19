@@ -1,0 +1,62 @@
+{
+  "courses": [
+    {
+      "title": "Spanish Vocabulary",
+      "decks": [
+        {
+          "title": "Greetings & Basics",
+          "cards": [
+            { "front": "hello", "back": "hola", "notes": null },
+            { "front": "goodbye", "back": "adiós", "notes": null },
+            { "front": "please", "back": "por favor", "notes": null },
+            { "front": "thank you", "back": "gracias", "notes": null },
+            { "front": "yes / no", "back": "sí / no", "notes": null },
+            { "front": "good morning", "back": "buenos días", "notes": "Used until noon." },
+            { "front": "good night", "back": "buenas noches", "notes": null },
+            { "front": "how are you?", "back": "¿cómo estás?", "notes": "Informal." },
+            { "front": "my name is…", "back": "me llamo…", "notes": null },
+            { "front": "excuse me", "back": "perdón", "notes": null }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "World Capitals",
+      "decks": [
+        {
+          "title": "Europe",
+          "cards": [
+            { "front": "France", "back": "Paris", "notes": null },
+            { "front": "Germany", "back": "Berlin", "notes": null },
+            { "front": "Spain", "back": "Madrid", "notes": null },
+            { "front": "Italy", "back": "Rome", "notes": null },
+            { "front": "Sweden", "back": "Stockholm", "notes": null },
+            { "front": "Norway", "back": "Oslo", "notes": null },
+            { "front": "Poland", "back": "Warsaw", "notes": null },
+            { "front": "Greece", "back": "Athens", "notes": null },
+            { "front": "Portugal", "back": "Lisbon", "notes": null },
+            { "front": "Netherlands", "back": "Amsterdam", "notes": "Seat of government is The Hague." }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Java Fundamentals",
+      "decks": [
+        {
+          "title": "Core Concepts",
+          "cards": [
+            { "front": "What is the JVM?", "back": "The Java Virtual Machine — runs compiled Java bytecode.", "notes": null },
+            { "front": "Difference between == and .equals()?", "back": "== compares references; .equals() compares value/content.", "notes": null },
+            { "front": "What is a record?", "back": "An immutable data carrier with auto-generated constructor, accessors, equals/hashCode/toString.", "notes": "Since Java 16." },
+            { "front": "checked vs unchecked exception?", "back": "Checked must be declared/handled; unchecked (RuntimeException) need not be.", "notes": null },
+            { "front": "What does 'final' on a variable mean?", "back": "It can be assigned only once.", "notes": null },
+            { "front": "Interface vs abstract class?", "back": "A class implements many interfaces but extends one class; interfaces hold no instance state.", "notes": null },
+            { "front": "What is autoboxing?", "back": "Automatic conversion between primitives and their wrapper types (int ↔ Integer).", "notes": null },
+            { "front": "What is the purpose of Optional?", "back": "To represent a possibly-absent value without null.", "notes": null }
+          ]
+        }
+      ]
+    }
+  ]
+}

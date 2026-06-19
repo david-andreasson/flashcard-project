@@ -11,4 +11,6 @@ public interface DeckRepository extends JpaRepository<Deck, Long> {
     Page<Deck> findByCourseId(Long courseId, Pageable pageable);
 
     Optional<Deck> findByIdAndCourseId(Long id, Long courseId);
+
+    Optional<Deck> findByCourseIdAndTitle(Long courseId, String title);
 }
