@@ -1,4 +1,9 @@
 spring:
+  config:
+    # Load a local, gitignored .env (KEY=value) when present — e.g. ONEMIN_API_KEY, AI_PROVIDER.
+    # `optional:` makes it a no-op when absent, so CI / prod / a fresh checkout use real env vars.
+    import: "optional:file:.env[.properties],optional:file:backend/.env[.properties]"
+
   datasource:
     url: ${DATASOURCE_URL:jdbc:postgresql://localhost:5433/flashcards}
     username: ${DATASOURCE_USERNAME:flashcard}
@@ -49,11 +54,12 @@ app:
 # AI cost-protection infrastructure (change 06). Mock provider by default — no API key needed.
 ai:
   enabled: ${AI_ENABLED:true}              # global kill-switch; false -> all AI calls 503
-  provider: ${AI_PROVIDER:mock}            # mock | anthropic (anthropic added in change 07)
+  provider: ${AI_PROVIDER:mock}            # mock | 1min  (mock is default; 1min added in change 07)
   max-input-chars: ${AI_MAX_INPUT_CHARS:8000}
   default-max-tokens: ${AI_DEFAULT_MAX_TOKENS:1024}
   pricing:
-    # USD per token. Placeholder rates; real Anthropic prices land in change 07.
+    # USD per token. Rough proxy only: 1min.ai meters in credits and reports no token counts,
+    # so logged cost is estimated. The token quota below is the real spend guardrail.
     input-rate: ${AI_PRICE_INPUT:0.000003}
     output-rate: ${AI_PRICE_OUTPUT:0.000015}
   quota:
@@ -61,3 +67,10 @@ ai:
     free: ${AI_QUOTA_FREE:0}
     premium: ${AI_QUOTA_PREMIUM:200000}
     admin: ${AI_QUOTA_ADMIN:100000000}
+  # Provider-scoped settings for 1min.ai (used only when ai.provider=1min). Key comes from the env.
+  onemin:
+    base-url: ${ONEMIN_BASE_URL:https://api.1min.ai}
+    api-key: ${ONEMIN_API_KEY:}
+    model: ${ONEMIN_MODEL:claude-haiku-4-5-20251001}  # Claude Haiku 4.5 — 1min.ai's current Haiku slug
+  card-generation:
+    max-count: ${AI_CARD_MAX_COUNT:30}     # upper bound on cards generated per request

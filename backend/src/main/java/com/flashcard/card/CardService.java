@@ -1,6 +1,7 @@
 package com.flashcard.card;
 
 import com.flashcard.auth.AuthPrincipal;
+import com.flashcard.card.dto.CreateCardRequest;
 import com.flashcard.common.NotFoundException;
 import com.flashcard.course.CourseService;
 import com.flashcard.deck.DeckRepository;
@@ -8,6 +9,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.List;
 
 /**
  * Card operations resolve access through the hierarchy: the course (read = owned-or-public,
@@ -35,6 +38,21 @@ public class CardService {
         courseService.getWritable(courseId, principal);
         requireDeckInCourse(deckId, courseId);
         return cardRepository.save(new Card(deckId, front, back, notes));
+    }
+
+    /**
+     * Create many cards in one deck atomically. Access is checked once for the deck; bean
+     * validation has already rejected any batch with a blank front or back before this runs.
+     */
+    @Transactional
+    public List<Card> createBulk(Long courseId, Long deckId, AuthPrincipal principal,
+                                 List<CreateCardRequest> items) {
+        courseService.getWritable(courseId, principal);
+        requireDeckInCourse(deckId, courseId);
+        List<Card> cards = items.stream()
+                .map(i -> new Card(deckId, i.front(), i.back(), i.notes()))
+                .toList();
+        return cardRepository.saveAll(cards);
     }
 
     @Transactional(readOnly = true)

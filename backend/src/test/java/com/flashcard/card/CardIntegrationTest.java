@@ -184,4 +184,53 @@ class CardIntegrationTest {
         long cardsAfter2 = cardRepository.findByDeckId(deck.getId(), PageRequest.of(0, 100)).getTotalElements();
         assertThat(cardsAfter2).isEqualTo(10);
     }
+
+    private long deckCardCount(long deckId) {
+        return cardRepository.findByDeckId(deckId, PageRequest.of(0, 100)).getTotalElements();
+    }
+
+    // 7.x — bulk create: owner creates all in one request
+    @Test
+    void bulkCreate_owner_createsAll() throws Exception {
+        AuthPrincipal owner = newUser(Role.USER);
+        long c = course(owner, Visibility.PRIVATE);
+        long d = deck(c);
+
+        mockMvc.perform(post(cardsUrl(c, d) + "/bulk").with(as(owner)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cards\":[{\"front\":\"a\",\"back\":\"1\"},{\"front\":\"b\",\"back\":\"2\"}]}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].front").value("a"));
+        assertThat(deckCardCount(d)).isEqualTo(2);
+    }
+
+    // 7.x — bulk create into a course you do not own: 404, nothing created
+    @Test
+    void bulkCreate_nonOwner_404_noneCreated() throws Exception {
+        AuthPrincipal owner = newUser(Role.USER);
+        AuthPrincipal other = newUser(Role.USER);
+        long c = course(owner, Visibility.PRIVATE);
+        long d = deck(c);
+
+        mockMvc.perform(post(cardsUrl(c, d) + "/bulk").with(as(other)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cards\":[{\"front\":\"a\",\"back\":\"1\"}]}"))
+                .andExpect(status().isNotFound());
+        assertThat(deckCardCount(d)).isZero();
+    }
+
+    // 7.x — a blank front/back in any item rejects the whole batch: 400, nothing created
+    @Test
+    void bulkCreate_invalidItem_400_noneCreated() throws Exception {
+        AuthPrincipal owner = newUser(Role.USER);
+        long c = course(owner, Visibility.PRIVATE);
+        long d = deck(c);
+
+        mockMvc.perform(post(cardsUrl(c, d) + "/bulk").with(as(owner)).with(csrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"cards\":[{\"front\":\"ok\",\"back\":\"1\"},{\"front\":\"\",\"back\":\"2\"}]}"))
+                .andExpect(status().isBadRequest());
+        assertThat(deckCardCount(d)).isZero();
+    }
 }

@@ -55,10 +55,10 @@ public class AiService {
         if (quotaService.isOverQuota(principal)) {
             throw new QuotaExceededException("Monthly AI token quota reached");
         }
-        // 5. Provider call — apply the default output cap when none is given
-        AiRequest effective = request.maxTokens() != null
-                ? request
-                : new AiRequest(request.systemPrompt(), request.userMessage(), aiProperties.defaultMaxTokens());
+        // 5. Provider call — stamp the feature key and apply the default output cap when none is given
+        int maxTokens = request.maxTokens() != null ? request.maxTokens() : aiProperties.defaultMaxTokens();
+        AiRequest effective = new AiRequest(
+                request.systemPrompt(), request.userMessage(), maxTokens, featureKey);
         AiResponse response = provider.complete(effective);
 
         // 6. Log usage with estimated cost

@@ -12,3 +12,7 @@ spring:
 
   flyway:
     enabled: false
+
+# Tests always use the deterministic mock provider, regardless of any local .env override.
+ai:
+  provider: mock

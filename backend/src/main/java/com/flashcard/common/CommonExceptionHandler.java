@@ -36,4 +36,9 @@ public class CommonExceptionHandler {
     public ProblemDetail handleServiceUnavailable(ServiceUnavailableException ex) {
         return ProblemDetail.forStatusAndDetail(HttpStatus.SERVICE_UNAVAILABLE, ex.getMessage());
     }
+
+    @ExceptionHandler(UpstreamAiException.class)
+    public ProblemDetail handleUpstreamAi(UpstreamAiException ex) {
+        return ProblemDetail.forStatusAndDetail(HttpStatus.BAD_GATEWAY, ex.getMessage());
+    }
 }
