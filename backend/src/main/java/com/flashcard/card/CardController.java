@@ -1,12 +1,14 @@
 package com.flashcard.card;
 
 import com.flashcard.auth.AuthPrincipal;
+import com.flashcard.card.dto.BulkCreateCardsRequest;
 import com.flashcard.card.dto.CardResponse;
 import com.flashcard.card.dto.CreateCardRequest;
 import com.flashcard.card.dto.UpdateCardRequest;
 import com.flashcard.common.PageRequests;
 import com.flashcard.common.PagedResponse;
 import jakarta.validation.Valid;
+import java.util.List;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -39,6 +41,16 @@ public class CardController {
                                @Valid @RequestBody CreateCardRequest request) {
         return CardResponse.from(
                 cardService.create(courseId, deckId, principal, request.front(), request.back(), request.notes()));
+    }
+
+    @PostMapping("/bulk")
+    @ResponseStatus(HttpStatus.CREATED)
+    public List<CardResponse> createBulk(@AuthenticationPrincipal AuthPrincipal principal,
+                                         @PathVariable Long courseId,
+                                         @PathVariable Long deckId,
+                                         @Valid @RequestBody BulkCreateCardsRequest request) {
+        return cardService.createBulk(courseId, deckId, principal, request.cards())
+                .stream().map(CardResponse::from).toList();
     }
 
     @GetMapping

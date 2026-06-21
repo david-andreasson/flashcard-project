@@ -13,7 +13,7 @@ Key decisions made before implementation began. Changing these later would requi
 | Database | PostgreSQL 16 (Docker Compose locally on port 5433, RDS in production) |
 | Migrations | Flyway — `ddl-auto=validate`, never auto-DDL |
 | Build | Maven Wrapper (`./mvnw`), npm |
-| AI | Pluggable `AiProvider` interface; first implementation: Anthropic Claude API |
+| AI | Pluggable `AiProvider` interface; first real provider: 1min.ai (model aggregator, Claude Haiku by default) |
 
 ---
 
@@ -98,7 +98,7 @@ card holds content; each user has their own schedule for it.
 
 ---
 
-## AI provider abstraction (change 06)
+## AI provider abstraction (change 06, first real provider in 07)
 
 AI features use a pluggable interface so the provider can be swapped without touching quota or logging code.
 
@@ -107,12 +107,37 @@ interface AiProvider {
     AiResponse complete(AiRequest request)
 }
 
-AiRequest  { systemPrompt, userMessage, maxTokens }
+AiRequest  { systemPrompt, userMessage, maxTokens, featureKey }
 AiResponse { content, inputTokens, outputTokens, modelId }
 ```
 
-Active provider selected via `ai.provider=anthropic|openai` in application config.  
-Token counts from `AiResponse` flow directly into `AiUsageLog` for quota enforcement.
+Active provider selected via `ai.provider=mock|1min` (`mock` is the default — deterministic,
+free, no key). Token counts from `AiResponse` flow into `AiUsageLog` for quota enforcement.
+Providers whose backend does not report usage (1min.ai) estimate tokens via a shared
+`TokenEstimator` (~4 chars/token), so quota and logging are unchanged; the logged USD cost is
+then an estimate (1min.ai meters in credits, the token quota is the real spend guardrail).
+
+**1min.ai provider (change 07):** `OneMinAiProvider` (active when `ai.provider=1min`) calls
+`POST {base-url}/api/chat-with-ai` with header `API-KEY`, body
+`{type:"UNIFY_CHAT_WITH_AI", model, promptObject:{prompt}}`, and reads the text at
+`aiRecord.aiRecordDetail.resultObject`. Config is provider-scoped under `ai.onemin.*` (base URL,
+API key from `ONEMIN_API_KEY`, model). An upstream failure or unusable response surfaces as HTTP 502.
+
+---
+
+## AI card generation (change 07)
+
+Paste text → drafts → review → save, with the cost guard wrapping only generation:
+
+1. `POST /api/ai/cards/generate` runs the guarded `AiService` pipeline (kill-switch → plan gate →
+   input limit → quota → provider → usage log), then asks the model for a strict JSON array of
+   `{front, back}` and parses it. It persists nothing.
+2. The client reviews/edits/selects drafts and picks a target deck they own.
+3. `POST /api/courses/{courseId}/decks/{deckId}/cards/bulk` saves the chosen drafts as cards —
+   plain ownership-checked card creation, **no AI cost**.
+
+Structured output is provider-neutral: the prompt requests JSON and the service parses it, rather
+than using any provider-specific structured-output API — so it works for 1min.ai and any future provider.
 
 ---
 

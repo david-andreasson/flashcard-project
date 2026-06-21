@@ -24,6 +24,7 @@ export function RootLayout() {
         <span style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
           <Link to="/" style={{ fontWeight: 600 }}>Flashcard App</Link>
           {user && <Link to="/courses">Courses</Link>}
+          {user && <Link to="/ai/generate">AI Cards</Link>}
           {user && <Link to="/study-history">History</Link>}
         </span>
         {user && (
