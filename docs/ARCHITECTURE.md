@@ -74,11 +74,12 @@ Card            ← shared CONTENT only (one row, studied by many)
   id, deckId
   front, back, notes
 
-UserCardState   ← per-user study progress (change 04); one row per (user, card)
+UserCardState   ← per-user SM-2 state (change 08); one row per (user, card), created lazily on first review
   id, userId, cardId
-  easeFactor    (SM-2, default 2.5)
-  intervalDays  (SM-2, default 1)
-  dueAt         (SM-2, nullable)
+  easeFactor       (SM-2, default 2.5, floored at 1.3)
+  intervalDays     (SM-2, default 0)
+  repetitions      (SM-2, default 0)
+  dueAt, lastReviewedAt
   UNIQUE (userId, cardId)
 
 AiUsageLog      ← cost tracking
@@ -138,6 +139,22 @@ Paste text → drafts → review → save, with the cost guard wrapping only gen
 
 Structured output is provider-neutral: the prompt requests JSON and the service parses it, rather
 than using any provider-specific structured-output API — so it works for 1min.ai and any future provider.
+
+---
+
+## Spaced repetition (change 08)
+
+Per-user SM-2 scheduling. Grading a card Again / Hard / Good / Easy maps to SM-2 quality 1 / 3 / 4 / 5
+and updates the user's `UserCardState` (created lazily on first review, so a shared card schedules
+independently per user). A failing grade resets the card; passes grow the interval 1 → 6 →
+`round(interval × ease)`, with ease floored at 1.3. Endpoints:
+
+- `POST /api/courses/{c}/decks/{d}/cards/{id}/review` — grade a card, returns the next due date
+- `GET /api/courses/{c}/decks/{d}/due` — the user's due + new cards for a readable deck
+- `GET /api/study/progress` — counts (due now, in review, reviewed today)
+
+The study frontend adds a due-review mode (four-button grading) and a progress view. Scheduling is
+day-grained and computed against a UTC "today" boundary.
 
 ---
 

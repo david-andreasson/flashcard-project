@@ -106,12 +106,20 @@ export function DeckCardsPage() {
       {cards.length === 0 ? (
         <p style={{ color: '#888' }}>No cards yet.</p>
       ) : (
-        <button
-          onClick={() => navigate(`/courses/${cId}/decks/${dId}/study`)}
-          style={{ padding: '0.5rem 1.25rem', marginBottom: '1rem' }}
-        >
-          ▶ Study this deck
-        </button>
+        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
+          <button
+            onClick={() => navigate(`/courses/${cId}/decks/${dId}/study`)}
+            style={{ padding: '0.5rem 1.25rem' }}
+          >
+            ▶ Study this deck
+          </button>
+          <button
+            onClick={() => navigate(`/courses/${cId}/decks/${dId}/review`)}
+            style={{ padding: '0.5rem 1.25rem' }}
+          >
+            🔁 Review due
+          </button>
+        </div>
       )}
 
       <ul style={{ listStyle: 'none', padding: 0 }}>

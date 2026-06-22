@@ -13,6 +13,8 @@ import { CourseDetailPage } from './components/CourseDetailPage'
 import { DeckCardsPage } from './components/DeckCardsPage'
 import { AiGeneratePage } from './components/AiGeneratePage'
 import { StudyPage } from './components/StudyPage'
+import { ReviewPage } from './components/ReviewPage'
+import { ProgressPage } from './components/ProgressPage'
 import { StudyHistoryPage } from './components/StudyHistoryPage'
 import './style.css'
 
@@ -31,8 +33,10 @@ const router = createBrowserRouter([
           { path: 'courses/:id', element: <CourseDetailPage /> },
           { path: 'courses/:courseId/decks/:deckId', element: <DeckCardsPage /> },
           { path: 'courses/:courseId/decks/:deckId/study', element: <StudyPage /> },
+          { path: 'courses/:courseId/decks/:deckId/review', element: <ReviewPage /> },
           { path: 'ai/generate', element: <AiGeneratePage /> },
           { path: 'study-history', element: <StudyHistoryPage /> },
+          { path: 'progress', element: <ProgressPage /> },
           { path: '*', element: <NotFoundPage /> },
         ],
       },
