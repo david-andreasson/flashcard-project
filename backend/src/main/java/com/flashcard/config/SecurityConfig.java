@@ -37,10 +37,18 @@ public class SecurityConfig {
         CookieCsrfTokenRepository csrfTokenRepository = CookieCsrfTokenRepository.withHttpOnlyFalse();
         csrfTokenRepository.setCookiePath("/");
 
+        // Opt out of the deferred CSRF token (csrfRequestAttributeName = null) so the token is
+        // resolved and persisted on every request. With the default deferred token, an
+        // authenticated POST can clear the XSRF-TOKEN cookie, leaving the next state-changing
+        // request with no token to echo back — which fails CSRF and, because the CSRF filter runs
+        // before authentication, surfaces as a 401 on every other request.
+        CsrfTokenRequestAttributeHandler csrfTokenRequestHandler = new CsrfTokenRequestAttributeHandler();
+        csrfTokenRequestHandler.setCsrfRequestAttributeName(null);
+
         http
             .csrf(csrf -> csrf
                 .csrfTokenRepository(csrfTokenRepository)
-                .csrfTokenRequestHandler(new CsrfTokenRequestAttributeHandler())
+                .csrfTokenRequestHandler(csrfTokenRequestHandler)
             )
             // No server-side HTTP session; identity comes from the access-token cookie.
             .sessionManagement(session -> session

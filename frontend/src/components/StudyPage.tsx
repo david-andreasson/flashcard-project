@@ -88,7 +88,10 @@ export function StudyPage() {
     )
   }
 
-  if (finished) {
+  // Show the summary as soon as the queue empties. The session-recording effect runs after this
+  // render, so guarding only on `finished` would let this render reach `queue[0]` (undefined) and
+  // crash on `card.front`; checking `queue.length === 0` covers that one render.
+  if (finished || queue.length === 0) {
     return (
       <div style={{ maxWidth: 640 }}>
         <h1>Session complete</h1>
