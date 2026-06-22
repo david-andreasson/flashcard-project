@@ -35,3 +35,17 @@ export function bulkCreateCards(courseId: number, deckId: number, cards: CardInp
     body: JSON.stringify({ cards }),
   }).then(asJson<Card[]>)
 }
+
+export interface ExtractedPdf {
+  text: string
+  pageCount: number
+  charCount: number
+  truncated: boolean
+}
+
+/** Upload a PDF and get its extracted text (capped to the AI input limit). No AI cost. */
+export function extractPdf(file: File) {
+  const form = new FormData()
+  form.append('file', file)
+  return apiFetch('/ai/cards/extract-pdf', { method: 'POST', body: form }).then(asJson<ExtractedPdf>)
+}

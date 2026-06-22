@@ -78,11 +78,11 @@ class AiPipelineIntegrationTest {
                 .andExpect(status().isOk());
     }
 
-    // 6.3 — input limit (default max-input-chars = 8000)
+    // 6.3 — input limit (max-input-chars = 24000 since change 09)
     @Test
     void inputLimit_oversized_400() throws Exception {
         AuthPrincipal premium = newUser(Role.USER, Plan.PREMIUM);
-        String big = "x".repeat(9000);
+        String big = "x".repeat(25000);
         mockMvc.perform(post("/ai/echo").with(as(premium)).with(csrf())
                         .contentType(MediaType.APPLICATION_JSON).content(echo(big)))
                 .andExpect(status().isBadRequest());
