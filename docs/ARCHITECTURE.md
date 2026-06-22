@@ -158,6 +158,20 @@ day-grained and computed against a UTC "today" boundary.
 
 ---
 
+## PDF import (change 09)
+
+A PDF is just another text source for card generation. `POST /api/ai/cards/extract-pdf` (multipart)
+extracts embedded text with Apache PDFBox, caps it to `ai.max-input-chars`, and returns
+`{text, pageCount, charCount, truncated}`. The client fills the generation text area with it and runs
+the existing generate → review → save flow.
+
+- Extraction makes no AI call, so it needs only authentication; the PREMIUM/ADMIN gate stays at generation.
+- The upload is processed in memory and **discarded** — no storage. S3 is deferred to change 10.
+- Scanned/image PDFs (no text layer) and unreadable files are rejected with 400; oversized uploads → 413. OCR is out of scope.
+- `ai.max-input-chars` was raised to 24000 (~6–8 A4 pages) so a multi-page PDF fits one generation; the monthly token quota remains the spend ceiling.
+
+---
+
 ## Patterns established early
 
 | Pattern | Established in | Why it must be early |

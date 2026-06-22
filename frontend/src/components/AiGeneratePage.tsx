@@ -1,8 +1,8 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { listCourses, listDecks, type Course, type Deck } from '../lib/courses'
-import { bulkCreateCards, generateCards } from '../lib/aiCards'
+import { bulkCreateCards, extractPdf, generateCards } from '../lib/aiCards'
 
 interface DraftRow {
   id: number
@@ -30,6 +30,8 @@ export function AiGeneratePage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState<{ count: number; courseId: number; deckId: number } | null>(null)
+  const [pdfNotice, setPdfNotice] = useState<string | null>(null)
+  const [extracting, setExtracting] = useState(false)
 
   const [courses, setCourses] = useState<Course[]>([])
   const [decks, setDecks] = useState<Deck[]>([])
@@ -62,6 +64,28 @@ export function AiGeneratePage() {
         </p>
       </div>
     )
+  }
+
+  async function onPdf(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0]
+    event.target.value = '' // allow re-selecting the same file
+    if (!file) return
+    setError(null)
+    setSaved(null)
+    setPdfNotice(null)
+    setExtracting(true)
+    try {
+      const res = await extractPdf(file)
+      setText(res.text)
+      setPdfNotice(
+        `Extracted ${res.charCount} characters from ${res.pageCount} page${res.pageCount === 1 ? '' : 's'}` +
+          (res.truncated ? ` (truncated to ${res.text.length} for generation).` : '.'),
+      )
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Could not read the PDF')
+    } finally {
+      setExtracting(false)
+    }
   }
 
   async function onGenerate(event: FormEvent) {
@@ -140,6 +164,12 @@ export function AiGeneratePage() {
           required
           placeholder="Paste notes, a paragraph, definitions…"
         />
+        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
+          <label htmlFor="pdf">Or upload a PDF:</label>
+          <input id="pdf" type="file" accept="application/pdf,.pdf" onChange={onPdf} disabled={extracting} />
+          {extracting && <span style={{ color: '#888' }}>Extracting…</span>}
+        </div>
+        {pdfNotice && <p style={{ fontSize: '0.8rem', color: '#888', margin: 0 }}>{pdfNotice}</p>}
         <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
           <label htmlFor="count">Max cards (optional)</label>
           <input

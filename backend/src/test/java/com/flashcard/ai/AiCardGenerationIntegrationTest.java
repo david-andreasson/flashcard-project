@@ -91,7 +91,7 @@ class AiCardGenerationIntegrationTest {
     void oversizedInput_400_andNotLogged() throws Exception {
         AuthPrincipal premium = newUser(Role.USER, Plan.PREMIUM);
         mockMvc.perform(post("/ai/cards/generate").with(as(premium)).with(csrf())
-                        .contentType(MediaType.APPLICATION_JSON).content(gen("x".repeat(9000))))
+                        .contentType(MediaType.APPLICATION_JSON).content(gen("x".repeat(25000))))
                 .andExpect(status().isBadRequest());
         assertThat(logsFor(premium)).isEmpty();
     }

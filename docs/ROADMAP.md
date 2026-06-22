@@ -17,7 +17,7 @@ Completed changes are archived under `openspec/changes/archive/`.
 | 06 | `ai-quota-infra` | ✅ Done | AiProvider interface (pluggable), AiUsageLog table, plan-gating middleware, monthly token quotas — must precede all AI features |
 | 07 | `ai-card-generation` | ✅ Done | Paste text → guarded AI pipeline → `AiProvider` (first real provider: 1min.ai) → `{front, back}` card drafts; client-side review then bulk-save into a deck; requires PREMIUM or ADMIN |
 | 08 | `spaced-repetition` | ✅ Done | Per-user `UserCardState` table (easeFactor, intervalDays, repetitions, dueAt), created lazily on first review; SM-2 from Again/Hard/Good/Easy grades; due-card queue + per-card review endpoint; progress summary; due-review mode + progress dashboard in the UI |
-| 09 | `pdf-import` | Planned | PDF upload + text extraction (Apache PDFBox), feeds AI card generation, file size limits, S3 storage |
+| 09 | `pdf-import` | ✅ Done | PDF upload + Apache PDFBox text extraction (`POST /ai/cards/extract-pdf`), capped to the AI input limit (raised to 24000) and fed to the existing generate → review → save flow; extract-and-discard (S3 deferred to change 10) |
 | 10 | `aws-deployment` | Planned | Dockerfile, S3 + CloudFront for frontend, RDS PostgreSQL, ECS Fargate, GitHub Actions CI/CD |
 
 ---

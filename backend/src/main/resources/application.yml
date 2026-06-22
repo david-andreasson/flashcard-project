@@ -23,6 +23,12 @@ spring:
     enabled: true
     locations: classpath:db/migration
 
+  servlet:
+    multipart:
+      # PDF upload limits (change 09). Extraction is in-memory; the file is never stored.
+      max-file-size: ${MAX_FILE_SIZE:10MB}
+      max-request-size: ${MAX_REQUEST_SIZE:12MB}
+
 management:
   endpoints:
     web:
@@ -55,7 +61,7 @@ app:
 ai:
   enabled: ${AI_ENABLED:true}              # global kill-switch; false -> all AI calls 503
   provider: ${AI_PROVIDER:mock}            # mock | 1min  (mock is default; 1min added in change 07)
-  max-input-chars: ${AI_MAX_INPUT_CHARS:8000}
+  max-input-chars: ${AI_MAX_INPUT_CHARS:24000}   # ~6-8 A4 pages (PDF import, change 09); quota still caps total spend
   default-max-tokens: ${AI_DEFAULT_MAX_TOKENS:1024}
   pricing:
     # USD per token. Rough proxy only: 1min.ai meters in credits and reports no token counts,

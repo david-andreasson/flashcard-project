@@ -25,7 +25,8 @@ export async function apiFetch(path: string, options: RequestInit = {}): Promise
     if (csrf) {
       headers.set('X-XSRF-TOKEN', csrf)
     }
-    if (options.body !== undefined && !headers.has('Content-Type')) {
+    // Don't force JSON for FormData uploads — the browser must set the multipart boundary itself.
+    if (options.body !== undefined && !headers.has('Content-Type') && !(options.body instanceof FormData)) {
       headers.set('Content-Type', 'application/json')
     }
   }
