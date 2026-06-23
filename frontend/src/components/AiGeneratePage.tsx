@@ -1,7 +1,7 @@
-import { useEffect, useState, type ChangeEvent, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
-import { listCourses, listDecks, type Course, type Deck } from '../lib/courses'
+import { createCourse, createDeck, listCourses, listDecks, type Course, type Deck } from '../lib/courses'
 import { bulkCreateCards, extractPdf, generateCards } from '../lib/aiCards'
 
 interface DraftRow {
@@ -15,6 +15,15 @@ interface Usage {
   inputTokens: number
   outputTokens: number
   model: string
+}
+
+// A save target selection: an existing id, nothing chosen (''), or the "create new" sentinel.
+type Target = number | '' | 'new'
+
+function parseTarget(value: string): Target {
+  if (value === '') return ''
+  if (value === 'new') return 'new'
+  return Number(value)
 }
 
 export function AiGeneratePage() {
@@ -35,8 +44,13 @@ export function AiGeneratePage() {
 
   const [courses, setCourses] = useState<Course[]>([])
   const [decks, setDecks] = useState<Deck[]>([])
-  const [courseId, setCourseId] = useState<number | ''>('')
-  const [deckId, setDeckId] = useState<number | ''>('')
+  const [courseId, setCourseId] = useState<Target>('')
+  const [deckId, setDeckId] = useState<Target>('')
+  const [newCourseTitle, setNewCourseTitle] = useState('')
+  const [newDeckTitle, setNewDeckTitle] = useState('')
+  // Cache entities created during a save so a retry after a partial failure reuses them.
+  const createdCourse = useRef<Course | null>(null)
+  const createdDeck = useRef<Deck | null>(null)
 
   // Load the user's own courses (only owned courses are writable) once, if AI is available to them.
   useEffect(() => {
@@ -51,9 +65,21 @@ export function AiGeneratePage() {
       setDeckId('')
       return
     }
+    if (courseId === 'new') {
+      // A brand-new course has no decks, so the deck must be new too.
+      setDecks([])
+      setDeckId('new')
+      return
+    }
     listDecks(courseId).then((p) => setDecks(p.content)).catch((e) => setError(e.message))
     setDeckId('')
   }, [courseId])
+
+  // Any change to the chosen target invalidates a creation cached from a previous save attempt.
+  useEffect(() => {
+    createdCourse.current = null
+    createdDeck.current = null
+  }, [courseId, deckId, newCourseTitle, newDeckTitle])
 
   if (!canUseAi) {
     return (
@@ -116,10 +142,6 @@ export function AiGeneratePage() {
   }
 
   async function onSave() {
-    if (courseId === '' || deckId === '') {
-      setError('Pick a course and deck to save into.')
-      return
-    }
     const chosen = drafts.filter((d) => d.include && d.front.trim() && d.back.trim())
     if (chosen.length === 0) {
       setError('Select at least one draft with a front and back.')
@@ -128,10 +150,58 @@ export function AiGeneratePage() {
     setSaving(true)
     setError(null)
     try {
-      await bulkCreateCards(courseId, deckId, chosen.map((d) => ({ front: d.front, back: d.back })))
-      setSaved({ count: chosen.length, courseId, deckId })
+      // Resolve the target course — create it if "new", reusing a prior creation on retry.
+      let cId: number
+      if (courseId === 'new') {
+        let course = createdCourse.current
+        if (!course) {
+          const created = await createCourse(newCourseTitle.trim())
+          createdCourse.current = created
+          setCourses((prev) => [...prev, created])
+          course = created
+        }
+        cId = course.id
+      } else if (typeof courseId === 'number') {
+        cId = courseId
+      } else {
+        setError('Pick a course to save into.')
+        return
+      }
+
+      // Resolve the target deck — a new course always needs a new deck.
+      let dId: number
+      if (courseId === 'new' || deckId === 'new') {
+        let deck = createdDeck.current
+        if (!deck) {
+          const created = await createDeck(cId, newDeckTitle.trim())
+          createdDeck.current = created
+          setDecks((prev) => [...prev, created])
+          deck = created
+        }
+        dId = deck.id
+      } else if (typeof deckId === 'number') {
+        dId = deckId
+      } else {
+        setError('Pick a deck to save into.')
+        return
+      }
+
+      await bulkCreateCards(cId, dId, chosen.map((d) => ({ front: d.front, back: d.back })))
+      setSaved({ count: chosen.length, courseId: cId, deckId: dId })
       setDrafts([])
       setUsage(null)
+      setNewCourseTitle('')
+      setNewDeckTitle('')
+      createdCourse.current = null
+      createdDeck.current = null
+      // Keep a freshly created deck selected for the next batch when the course already existed;
+      // for a brand-new course, return to a clean slate (the new course/deck are now in the lists).
+      if (courseId === 'new') {
+        setCourseId('')
+        setDeckId('')
+      } else if (deckId === 'new') {
+        setDeckId(dId)
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Save failed')
     } finally {
@@ -140,6 +210,16 @@ export function AiGeneratePage() {
   }
 
   const selectedCount = drafts.filter((d) => d.include).length
+  const newCourseOk = newCourseTitle.trim().length > 0 && newCourseTitle.trim().length <= 200
+  const newDeckOk = newDeckTitle.trim().length > 0 && newDeckTitle.trim().length <= 200
+  const targetReady =
+    courseId === 'new'
+      ? newCourseOk && newDeckOk
+      : typeof courseId === 'number'
+        ? deckId === 'new'
+          ? newDeckOk
+          : typeof deckId === 'number'
+        : false
 
   return (
     <div style={{ maxWidth: 680 }}>
@@ -227,26 +307,61 @@ export function AiGeneratePage() {
             <select
               id="course"
               value={courseId}
-              onChange={(e) => setCourseId(e.target.value === '' ? '' : Number(e.target.value))}
+              onChange={(e) => setCourseId(parseTarget(e.target.value))}
             >
               <option value="">Select a course…</option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>{c.title}</option>
               ))}
+              <option value="new">➕ New course…</option>
             </select>
+            {courseId === 'new' && (
+              <input
+                aria-label="New course title"
+                placeholder="New course title"
+                value={newCourseTitle}
+                maxLength={200}
+                onChange={(e) => setNewCourseTitle(e.target.value)}
+              />
+            )}
+
             <label htmlFor="deck">deck</label>
-            <select
-              id="deck"
-              value={deckId}
-              onChange={(e) => setDeckId(e.target.value === '' ? '' : Number(e.target.value))}
-              disabled={courseId === ''}
-            >
-              <option value="">Select a deck…</option>
-              {decks.map((d) => (
-                <option key={d.id} value={d.id}>{d.title}</option>
-              ))}
-            </select>
-            <button type="button" onClick={onSave} disabled={saving || selectedCount === 0}>
+            {courseId === 'new' ? (
+              <input
+                id="deck"
+                aria-label="New deck title"
+                placeholder="New deck title"
+                value={newDeckTitle}
+                maxLength={200}
+                onChange={(e) => setNewDeckTitle(e.target.value)}
+              />
+            ) : (
+              <>
+                <select
+                  id="deck"
+                  value={deckId}
+                  onChange={(e) => setDeckId(parseTarget(e.target.value))}
+                  disabled={typeof courseId !== 'number'}
+                >
+                  <option value="">Select a deck…</option>
+                  {decks.map((d) => (
+                    <option key={d.id} value={d.id}>{d.title}</option>
+                  ))}
+                  <option value="new">➕ New deck…</option>
+                </select>
+                {deckId === 'new' && (
+                  <input
+                    aria-label="New deck title"
+                    placeholder="New deck title"
+                    value={newDeckTitle}
+                    maxLength={200}
+                    onChange={(e) => setNewDeckTitle(e.target.value)}
+                  />
+                )}
+              </>
+            )}
+
+            <button type="button" onClick={onSave} disabled={saving || selectedCount === 0 || !targetReady}>
               {saving ? 'Saving…' : `Save ${selectedCount} card${selectedCount === 1 ? '' : 's'}`}
             </button>
           </div>
