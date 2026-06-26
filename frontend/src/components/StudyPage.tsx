@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { listCards, type Card } from '../lib/courses'
 import { recordSession } from '../lib/study'
+import { Button } from './ui'
 
 function shuffle<T>(items: T[]): T[] {
   const a = [...items]
@@ -71,19 +72,23 @@ export function StudyPage() {
   if (error) {
     return (
       <div>
-        <h1>Can't study this deck</h1>
-        <button onClick={() => navigate('/courses')}>Back to courses</button>
+        <h1 className="text-2xl font-medium text-ink">Can't study this deck</h1>
+        <Button onClick={() => navigate('/courses')} className="mt-4">
+          Back to courses
+        </Button>
       </div>
     )
   }
-  if (!queue) return <p style={{ padding: '1rem' }}>Loading…</p>
+  if (!queue) return <p className="text-muted">Loading…</p>
 
   if (totalCards === 0) {
     return (
-      <div style={{ maxWidth: 640 }}>
-        <h1>Nothing to study</h1>
-        <p style={{ color: '#888' }}>This deck has no cards yet.</p>
-        <button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)}>Back to deck</button>
+      <div>
+        <h1 className="text-2xl font-medium text-ink">Nothing to study</h1>
+        <p className="mt-2 text-muted">This deck has no cards yet.</p>
+        <Button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)} className="mt-4">
+          Back to deck
+        </Button>
       </div>
     )
   }
@@ -93,17 +98,21 @@ export function StudyPage() {
   // crash on `card.front`; checking `queue.length === 0` covers that one render.
   if (finished || queue.length === 0) {
     return (
-      <div style={{ maxWidth: 640 }}>
-        <h1>Session complete</h1>
-        <p style={{ fontSize: '1.1rem' }}>
-          {totalCards} cards · <strong>{correctCount}</strong> correct on first try
+      <div>
+        <h1 className="text-2xl font-medium text-ink">Session complete</h1>
+        <p className="mt-2 text-lg text-ink">
+          {totalCards} cards · <span className="font-medium">{correctCount}</span> correct on first try
         </p>
         {recordError && (
-          <p role="alert" style={{ color: '#b58900' }}>Session not saved: {recordError}</p>
+          <p role="alert" className="mt-2 text-sm text-danger">
+            Session not saved: {recordError}
+          </p>
         )}
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-          <button onClick={load}>Study again</button>
-          <button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)}>Back to deck</button>
+        <div className="mt-4 flex gap-2">
+          <Button variant="primary" onClick={load}>
+            Study again
+          </Button>
+          <Button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)}>Back to deck</Button>
         </div>
       </div>
     )
@@ -111,46 +120,40 @@ export function StudyPage() {
 
   const card = queue[0]
   return (
-    <div style={{ maxWidth: 640 }}>
-      <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+    <div>
+      <Link
+        to={`/courses/${cId}`}
+        className="mb-3 inline-block text-sm text-muted no-underline hover:text-ink"
+      >
+        ← Back to course
+      </Link>
+      <div className="mb-2 text-sm text-muted">
         {queue.length} card{queue.length === 1 ? '' : 's'} left
       </div>
-      <div
-        style={{
-          border: '1px solid #ccc',
-          borderRadius: 10,
-          padding: '2rem',
-          minHeight: 160,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{card.front}</div>
+      <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-line bg-surface p-8 text-center">
+        <div className="text-2xl font-medium text-ink">{card.front}</div>
         {showBack && (
           <>
-            <hr style={{ width: '100%', margin: '1.25rem 0', border: 0, borderTop: '1px solid #ddd' }} />
-            <div style={{ fontSize: '1.3rem' }}>{card.back}</div>
-            {card.notes && <div style={{ color: '#888', marginTop: '0.5rem' }}>{card.notes}</div>}
+            <hr className="my-5 w-full border-0 border-t border-line" />
+            <div className="text-xl text-ink">{card.back}</div>
+            {card.notes && <div className="mt-2 text-muted">{card.notes}</div>}
           </>
         )}
       </div>
 
-      <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '0.75rem' }}>
+      <div className="mt-4 flex justify-center gap-3">
         {!showBack ? (
-          <button onClick={() => setShowBack(true)} style={{ padding: '0.6rem 1.5rem' }}>
+          <Button variant="primary" onClick={() => setShowBack(true)} className="px-6">
             Show answer
-          </button>
+          </Button>
         ) : (
           <>
-            <button onClick={() => grade(false)} style={{ padding: '0.6rem 1.5rem', color: 'crimson' }}>
-              ✗ Missed
-            </button>
-            <button onClick={() => grade(true)} style={{ padding: '0.6rem 1.5rem', color: 'green' }}>
-              ✓ Got it
-            </button>
+            <Button onClick={() => grade(false)} className="px-6 text-danger">
+              Missed
+            </Button>
+            <Button variant="primary" onClick={() => grade(true)} className="px-6">
+              Got it
+            </Button>
           </>
         )}
       </div>

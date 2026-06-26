@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
 import { createCourse, createDeck, listCourses, listDecks, type Course, type Deck } from '../lib/courses'
 import { bulkCreateCards, extractPdf, generateCards } from '../lib/aiCards'
+import { Alert, Button, Input, Select, Textarea } from './ui'
 
 interface DraftRow {
   id: number
@@ -83,9 +84,9 @@ export function AiGeneratePage() {
 
   if (!canUseAi) {
     return (
-      <div style={{ maxWidth: 680 }}>
-        <h1>Generate cards with AI</h1>
-        <p role="alert" style={{ color: 'crimson' }}>
+      <div>
+        <h1 className="text-2xl font-medium text-ink">Generate cards with AI</h1>
+        <p role="alert" className="mt-3 text-danger">
           AI features require a PREMIUM plan. Your account does not have access.
         </p>
       </div>
@@ -221,22 +222,30 @@ export function AiGeneratePage() {
           : typeof deckId === 'number'
         : false
 
+  const fieldGroup = 'flex flex-col gap-1.5 min-w-[170px]'
+
   return (
-    <div style={{ maxWidth: 680 }}>
-      <h1>Generate cards with AI</h1>
-      {error && <p role="alert" style={{ color: 'crimson' }}>{error}</p>}
+    <div>
+      <h1 className="text-2xl font-medium text-ink">Generate cards with AI</h1>
+      {error && (
+        <div className="mt-3">
+          <Alert tone="danger">{error}</Alert>
+        </div>
+      )}
       {saved && (
-        <p style={{ color: 'green', display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+        <div className="mt-3 flex items-center gap-3 text-sm text-success">
           Saved {saved.count} card{saved.count === 1 ? '' : 's'}.
-          <button onClick={() => navigate(`/courses/${saved.courseId}/decks/${saved.deckId}`)}>
+          <Button onClick={() => navigate(`/courses/${saved.courseId}/decks/${saved.deckId}`)} className="px-3 py-1.5">
             Go to deck
-          </button>
-        </p>
+          </Button>
+        </div>
       )}
 
-      <form onSubmit={onGenerate} style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-        <label htmlFor="source-text">Paste text to turn into flashcards</label>
-        <textarea
+      <form onSubmit={onGenerate} className="mt-4 flex flex-col gap-3">
+        <label htmlFor="source-text" className="text-sm text-muted">
+          Paste text to turn into flashcards
+        </label>
+        <Textarea
           id="source-text"
           value={text}
           onChange={(e) => setText(e.target.value)}
@@ -244,30 +253,41 @@ export function AiGeneratePage() {
           required
           placeholder="Paste notes, a paragraph, definitions…"
         />
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', flexWrap: 'wrap' }}>
-          <label htmlFor="pdf">Or upload a PDF:</label>
-          <input id="pdf" type="file" accept="application/pdf,.pdf" onChange={onPdf} disabled={extracting} />
-          {extracting && <span style={{ color: '#888' }}>Extracting…</span>}
+        <div className="flex flex-wrap items-center gap-2">
+          <label htmlFor="pdf" className="text-sm text-muted">
+            Or upload a PDF:
+          </label>
+          <input
+            id="pdf"
+            type="file"
+            accept="application/pdf,.pdf"
+            onChange={onPdf}
+            disabled={extracting}
+            className="text-sm text-muted file:mr-3 file:rounded-lg file:border file:border-line file:bg-surface file:px-3 file:py-1.5 file:text-sm file:text-ink"
+          />
+          {extracting && <span className="text-sm text-muted">Extracting…</span>}
         </div>
-        {pdfNotice && <p style={{ fontSize: '0.8rem', color: '#888', margin: 0 }}>{pdfNotice}</p>}
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-          <label htmlFor="count">Max cards (optional)</label>
+        {pdfNotice && <p className="text-xs text-muted">{pdfNotice}</p>}
+        <div className="flex items-center gap-2">
+          <label htmlFor="count" className="text-sm text-muted">
+            Max cards (optional)
+          </label>
           <input
             id="count"
             type="number"
             min={1}
             value={count}
             onChange={(e) => setCount(e.target.value)}
-            style={{ width: 80 }}
+            className="w-20 rounded-lg border border-line bg-surface px-3 py-2 text-sm text-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
           />
-          <button type="submit" disabled={generating || text.trim() === ''}>
+          <Button type="submit" variant="primary" disabled={generating || text.trim() === ''}>
             {generating ? 'Generating…' : 'Generate'}
-          </button>
+          </Button>
         </div>
       </form>
 
       {usage && (
-        <p style={{ fontSize: '0.8rem', color: '#888', marginTop: '0.75rem' }}>
+        <p className="mt-3 text-xs text-muted">
           {drafts.length} draft{drafts.length === 1 ? '' : 's'} · model {usage.model} · ~
           {usage.inputTokens + usage.outputTokens} tokens (estimated)
         </p>
@@ -275,69 +295,62 @@ export function AiGeneratePage() {
 
       {drafts.length > 0 && (
         <>
-          <h2 style={{ fontSize: '1rem', marginTop: '1rem' }}>Review drafts</h2>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
+          <h2 className="mt-6 text-lg font-medium text-ink">Review drafts</h2>
+          <ul className="mt-3 list-none p-0">
             {drafts.map((d) => (
-              <li
-                key={d.id}
-                style={{ border: '1px solid #ccc', borderRadius: 6, padding: '0.75rem', marginBottom: '0.5rem' }}
-              >
-                <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'flex-start' }}>
+              <li key={d.id} className="mb-2 rounded-xl border border-line bg-surface p-4">
+                <div className="flex items-start gap-3">
                   <input
                     type="checkbox"
                     checked={d.include}
                     onChange={(e) => patchDraft(d.id, { include: e.target.checked })}
                     aria-label="Include this card"
-                    style={{ marginTop: '0.4rem' }}
+                    className="mt-2 accent-[var(--color-accent)]"
                   />
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '0.4rem' }}>
-                    <input value={d.front} onChange={(e) => patchDraft(d.id, { front: e.target.value })} placeholder="Front" />
-                    <input value={d.back} onChange={(e) => patchDraft(d.id, { back: e.target.value })} placeholder="Back" />
+                  <div className="flex flex-1 flex-col gap-2">
+                    <Input value={d.front} onChange={(e) => patchDraft(d.id, { front: e.target.value })} placeholder="Front" />
+                    <Input value={d.back} onChange={(e) => patchDraft(d.id, { back: e.target.value })} placeholder="Back" />
                   </div>
-                  <button type="button" onClick={() => removeDraft(d.id)} style={{ color: 'crimson' }}>
+                  <Button type="button" onClick={() => removeDraft(d.id)} className="px-3 py-1.5 text-danger">
                     Remove
-                  </button>
+                  </Button>
                 </div>
               </li>
             ))}
           </ul>
 
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center', borderTop: '1px solid #ccc', paddingTop: '1rem' }}>
-            <label htmlFor="course">Save to course</label>
-            <select
-              id="course"
-              value={courseId}
-              onChange={(e) => setCourseId(parseTarget(e.target.value))}
-            >
-              <option value="">Select a course…</option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>{c.title}</option>
-              ))}
-              <option value="new">➕ New course…</option>
-            </select>
+          <div className="mt-4 flex flex-wrap items-end gap-3 rounded-xl border border-line bg-surface p-4">
+            <div className={fieldGroup}>
+              <label htmlFor="course" className="text-sm text-muted">Save to course</label>
+              <Select id="course" value={courseId} onChange={(e) => setCourseId(parseTarget(e.target.value))}>
+                <option value="">Select a course…</option>
+                {courses.map((c) => (
+                  <option key={c.id} value={c.id}>{c.title}</option>
+                ))}
+                <option value="new">+ New course…</option>
+              </Select>
+            </div>
+
             {courseId === 'new' && (
-              <input
-                aria-label="New course title"
-                placeholder="New course title"
-                value={newCourseTitle}
-                maxLength={200}
-                onChange={(e) => setNewCourseTitle(e.target.value)}
-              />
+              <div className={fieldGroup}>
+                <label htmlFor="new-course" className="text-sm text-muted">New course title</label>
+                <Input id="new-course" value={newCourseTitle} onChange={(e) => setNewCourseTitle(e.target.value)} placeholder="New course title" maxLength={200} />
+              </div>
             )}
 
-            <label htmlFor="deck">deck</label>
-            {courseId === 'new' ? (
-              <input
-                id="deck"
-                aria-label="New deck title"
-                placeholder="New deck title"
-                value={newDeckTitle}
-                maxLength={200}
-                onChange={(e) => setNewDeckTitle(e.target.value)}
-              />
-            ) : (
-              <>
-                <select
+            <div className={fieldGroup}>
+              <label htmlFor="deck" className="text-sm text-muted">Deck</label>
+              {courseId === 'new' ? (
+                <Input
+                  id="deck"
+                  aria-label="New deck title"
+                  value={newDeckTitle}
+                  onChange={(e) => setNewDeckTitle(e.target.value)}
+                  placeholder="New deck title"
+                  maxLength={200}
+                />
+              ) : (
+                <Select
                   id="deck"
                   value={deckId}
                   onChange={(e) => setDeckId(parseTarget(e.target.value))}
@@ -347,23 +360,27 @@ export function AiGeneratePage() {
                   {decks.map((d) => (
                     <option key={d.id} value={d.id}>{d.title}</option>
                   ))}
-                  <option value="new">➕ New deck…</option>
-                </select>
-                {deckId === 'new' && (
-                  <input
-                    aria-label="New deck title"
-                    placeholder="New deck title"
-                    value={newDeckTitle}
-                    maxLength={200}
-                    onChange={(e) => setNewDeckTitle(e.target.value)}
-                  />
-                )}
-              </>
+                  <option value="new">+ New deck…</option>
+                </Select>
+              )}
+            </div>
+
+            {courseId !== 'new' && deckId === 'new' && (
+              <div className={fieldGroup}>
+                <label htmlFor="new-deck" className="text-sm text-muted">New deck title</label>
+                <Input id="new-deck" value={newDeckTitle} onChange={(e) => setNewDeckTitle(e.target.value)} placeholder="New deck title" maxLength={200} />
+              </div>
             )}
 
-            <button type="button" onClick={onSave} disabled={saving || selectedCount === 0 || !targetReady}>
+            <Button
+              type="button"
+              variant="primary"
+              onClick={onSave}
+              disabled={saving || selectedCount === 0 || !targetReady}
+              className="ml-auto"
+            >
               {saving ? 'Saving…' : `Save ${selectedCount} card${selectedCount === 1 ? '' : 's'}`}
-            </button>
+            </Button>
           </div>
         </>
       )}

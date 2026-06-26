@@ -1,17 +1,29 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react'
 import { Link } from 'react-router-dom'
 import { createCourse, listCourses, type Course, type PagedResponse } from '../lib/courses'
+import { Alert, Button, Input } from './ui'
 
 const PAGE_SIZE = 10
 
-function CourseLink({ course }: { course: Course }) {
+function CourseCard({ course }: { course: Course }) {
   return (
-    <li style={{ padding: '0.4rem 0' }}>
-      <Link to={`/courses/${course.id}`}>{course.title}</Link>
-      {course.visibility === 'PUBLIC' && (
-        <span style={{ marginLeft: '0.5rem', fontSize: '0.75rem', color: '#888' }}>· public</span>
-      )}
-    </li>
+    <Link
+      to={`/courses/${course.id}`}
+      className="block rounded-xl border border-line bg-surface p-4 no-underline shadow-[var(--shadow)] transition hover:-translate-y-0.5 hover:border-accent hover:no-underline"
+    >
+      <div className="flex items-start justify-between gap-2">
+        <span className="font-medium text-ink">{course.title}</span>
+        {course.visibility === 'PUBLIC' && (
+          <span className="shrink-0 rounded-full border border-line px-2 py-0.5 text-xs text-muted">
+            public
+          </span>
+        )}
+      </div>
+      <div className="mt-2 text-sm text-muted">
+        {course.deckCount} deck{course.deckCount === 1 ? '' : 's'} · {course.cardCount} card
+        {course.cardCount === 1 ? '' : 's'}
+      </div>
+    </Link>
   )
 }
 
@@ -48,46 +60,66 @@ export function CoursesPage() {
   }
 
   return (
-    <div style={{ maxWidth: 640 }}>
-      <h1>Courses</h1>
-      {error && <p role="alert" style={{ color: 'crimson' }}>{error}</p>}
+    <div>
+      <h1 className="text-2xl font-medium text-ink">Courses</h1>
+      {error && (
+        <div className="mt-3">
+          <Alert tone="danger">{error}</Alert>
+        </div>
+      )}
 
-      <form onSubmit={onCreate} style={{ display: 'flex', gap: '0.5rem', margin: '1rem 0' }}>
-        <input
+      <form onSubmit={onCreate} className="mt-4 flex gap-2">
+        <Input
           value={newTitle}
           onChange={(e) => setNewTitle(e.target.value)}
           placeholder="New course title"
           required
-          style={{ flex: 1, padding: '0.5rem' }}
+          className="flex-1"
         />
-        <button type="submit" style={{ padding: '0.5rem 1rem' }}>Add course</button>
+        <Button type="submit" variant="primary">
+          Add course
+        </Button>
       </form>
 
-      <h2>My courses</h2>
+      <h2 className="mt-8 text-lg font-medium text-ink">My courses</h2>
       {mine && mine.content.length === 0 && (
-        <p style={{ color: '#888' }}>You don't have any courses yet. Create one above.</p>
+        <p className="mt-2 text-muted">You don't have any courses yet. Create one above.</p>
       )}
       {mine && mine.content.length > 0 && (
         <>
-          <ul style={{ listStyle: 'none', padding: 0 }}>
-            {mine.content.map((c) => <CourseLink key={c.id} course={c} />)}
-          </ul>
+          <div className="mt-3 grid gap-3 sm:grid-cols-2">
+            {mine.content.map((c) => (
+              <CourseCard key={c.id} course={c} />
+            ))}
+          </div>
           {mine.totalPages > 1 && (
-            <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center' }}>
-              <button disabled={minePage === 0} onClick={() => setMinePage((p) => p - 1)}>Prev</button>
-              <span style={{ fontSize: '0.85rem' }}>Page {mine.page + 1} of {mine.totalPages}</span>
-              <button disabled={minePage >= mine.totalPages - 1} onClick={() => setMinePage((p) => p + 1)}>Next</button>
+            <div className="mt-4 flex items-center gap-3">
+              <Button disabled={minePage === 0} onClick={() => setMinePage((p) => p - 1)} className="px-3 py-1.5">
+                Prev
+              </Button>
+              <span className="text-sm text-muted">
+                Page {mine.page + 1} of {mine.totalPages}
+              </span>
+              <Button
+                disabled={minePage >= mine.totalPages - 1}
+                onClick={() => setMinePage((p) => p + 1)}
+                className="px-3 py-1.5"
+              >
+                Next
+              </Button>
             </div>
           )}
         </>
       )}
 
-      <h2 style={{ marginTop: '2rem' }}>Public courses</h2>
-      {pub && pub.content.length === 0 && <p style={{ color: '#888' }}>No public courses yet.</p>}
-      {pub && (
-        <ul style={{ listStyle: 'none', padding: 0 }}>
-          {pub.content.map((c) => <CourseLink key={c.id} course={c} />)}
-        </ul>
+      <h2 className="mt-8 text-lg font-medium text-ink">Public courses</h2>
+      {pub && pub.content.length === 0 && <p className="mt-2 text-muted">No public courses yet.</p>}
+      {pub && pub.content.length > 0 && (
+        <div className="mt-3 grid gap-3 sm:grid-cols-2">
+          {pub.content.map((c) => (
+            <CourseCard key={c.id} course={c} />
+          ))}
+        </div>
       )}
     </div>
   )
