@@ -8,6 +8,8 @@ export interface Course {
   title: string
   visibility: Visibility
   createdAt: string
+  deckCount: number
+  cardCount: number
 }
 
 export interface Deck {

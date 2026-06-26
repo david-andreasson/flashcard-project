@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { PagedResponse } from '../lib/courses'
 import { listMySessions, type StudySession } from '../lib/study'
+import { Alert, Button } from './ui'
 
 function formatDate(iso: string): string {
   const d = new Date(iso)
@@ -17,30 +18,29 @@ export function StudyHistoryPage() {
   }, [page])
 
   return (
-    <div style={{ maxWidth: 640 }}>
-      <h1>Study history</h1>
-      {error && <p role="alert" style={{ color: 'crimson' }}>{error}</p>}
-
-      {data && data.content.length === 0 && (
-        <p style={{ color: '#888' }}>No study sessions yet. Study a deck to see it here.</p>
+    <div>
+      <h1 className="text-2xl font-medium text-ink">Study history</h1>
+      {error && (
+        <div className="mt-3">
+          <Alert tone="danger">{error}</Alert>
+        </div>
       )}
 
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+      {data && data.content.length === 0 && (
+        <p className="mt-3 text-muted">No study sessions yet. Study a deck to see it here.</p>
+      )}
+
+      <ul className="mt-4 list-none p-0">
         {data?.content.map((s) => (
           <li
             key={s.id}
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              borderBottom: '1px solid #eee',
-              padding: '0.6rem 0',
-            }}
+            className="flex items-center justify-between gap-3 border-b border-line py-3 text-sm"
           >
             <span>
-              <strong>{s.deckTitle}</strong>{' '}
-              <span style={{ color: '#888' }}>· {formatDate(s.finishedAt)}</span>
+              <span className="font-medium text-ink">{s.deckTitle}</span>{' '}
+              <span className="text-muted">· {formatDate(s.finishedAt)}</span>
             </span>
-            <span>
+            <span className="text-ink">
               {s.correctCount}/{s.totalCards}
             </span>
           </li>
@@ -48,10 +48,20 @@ export function StudyHistoryPage() {
       </ul>
 
       {data && data.totalPages > 1 && (
-        <div style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', marginTop: '0.5rem' }}>
-          <button disabled={page === 0} onClick={() => setPage((p) => p - 1)}>Prev</button>
-          <span style={{ fontSize: '0.85rem' }}>Page {data.page + 1} of {data.totalPages}</span>
-          <button disabled={page >= data.totalPages - 1} onClick={() => setPage((p) => p + 1)}>Next</button>
+        <div className="mt-4 flex items-center gap-3">
+          <Button onClick={() => setPage((p) => p - 1)} disabled={page === 0} className="px-3 py-1.5">
+            Prev
+          </Button>
+          <span className="text-sm text-muted">
+            Page {data.page + 1} of {data.totalPages}
+          </span>
+          <Button
+            onClick={() => setPage((p) => p + 1)}
+            disabled={page >= data.totalPages - 1}
+            className="px-3 py-1.5"
+          >
+            Next
+          </Button>
         </div>
       )}
     </div>

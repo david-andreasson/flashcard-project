@@ -9,7 +9,7 @@ export function ProtectedRoute() {
   const { user, loading } = useAuth()
 
   if (loading) {
-    return <p style={{ padding: '1rem' }}>Loading…</p>
+    return <p className="p-4 text-muted">Loading…</p>
   }
   if (!user) {
     return <Navigate to="/login" replace />

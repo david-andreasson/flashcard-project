@@ -1,21 +1,33 @@
 package com.flashcard.course;
 
 import com.flashcard.auth.AuthPrincipal;
+import com.flashcard.card.CardRepository;
 import com.flashcard.common.ForbiddenException;
 import com.flashcard.common.NotFoundException;
+import com.flashcard.deck.DeckRepository;
 import com.flashcard.user.Role;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
 @Service
 public class CourseService {
 
     private final CourseRepository courseRepository;
+    private final DeckRepository deckRepository;
+    private final CardRepository cardRepository;
 
-    public CourseService(CourseRepository courseRepository) {
+    public CourseService(CourseRepository courseRepository,
+                         DeckRepository deckRepository,
+                         CardRepository cardRepository) {
         this.courseRepository = courseRepository;
+        this.deckRepository = deckRepository;
+        this.cardRepository = cardRepository;
     }
 
     @Transactional
@@ -47,6 +59,22 @@ public class CourseService {
     @Transactional(readOnly = true)
     public Page<Course> listPublic(Pageable pageable) {
         return courseRepository.findByVisibility(Visibility.PUBLIC, pageable);
+    }
+
+    /** Deck and card counts per course id, for list rendering. courseId -> [deckCount, cardCount]. */
+    @Transactional(readOnly = true)
+    public Map<Long, long[]> countsFor(List<Long> courseIds) {
+        Map<Long, long[]> counts = new HashMap<>();
+        if (courseIds.isEmpty()) {
+            return counts;
+        }
+        for (Object[] row : deckRepository.countByCourseIds(courseIds)) {
+            counts.computeIfAbsent((Long) row[0], k -> new long[2])[0] = ((Number) row[1]).longValue();
+        }
+        for (Object[] row : cardRepository.countByCourseIds(courseIds)) {
+            counts.computeIfAbsent((Long) row[0], k -> new long[2])[1] = ((Number) row[1]).longValue();
+        }
+        return counts;
     }
 
     @Transactional

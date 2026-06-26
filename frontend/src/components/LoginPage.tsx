@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useAuth } from '../auth/AuthContext'
+import { Alert, Button, Card, Input } from './ui'
 
 export function LoginPage() {
   const { user, login } = useAuth()
@@ -29,39 +30,39 @@ export function LoginPage() {
   }
 
   return (
-    <div style={{ maxWidth: 320, margin: '4rem auto', padding: '0 1rem' }}>
-      <h1>Log in</h1>
-      <form onSubmit={onSubmit}>
-        <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-          Email
-          <input
-            type="email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
-            autoComplete="email"
-            style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem' }}
-          />
-        </label>
-        <label style={{ display: 'block', marginBottom: '0.75rem' }}>
-          Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            autoComplete="current-password"
-            style={{ width: '100%', padding: '0.5rem', marginTop: '0.25rem' }}
-          />
-        </label>
-        {error && <p role="alert" style={{ color: 'crimson' }}>{error}</p>}
-        <button type="submit" disabled={submitting} style={{ width: '100%', padding: '0.6rem' }}>
-          {submitting ? 'Logging in…' : 'Log in'}
-        </button>
-      </form>
-      <p style={{ marginTop: '1rem' }}>
-        No account? <Link to="/register">Register</Link>
-      </p>
+    <div className="mx-auto mt-20 w-full max-w-sm px-4">
+      <Card className="p-6">
+        <h1 className="text-2xl font-medium text-ink">Log in</h1>
+        <form onSubmit={onSubmit} className="mt-6 flex flex-col gap-4">
+          <label className="flex flex-col gap-1.5 text-sm text-muted">
+            Email
+            <Input
+              type="email"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              autoComplete="email"
+            />
+          </label>
+          <label className="flex flex-col gap-1.5 text-sm text-muted">
+            Password
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              autoComplete="current-password"
+            />
+          </label>
+          {error && <Alert tone="danger">{error}</Alert>}
+          <Button type="submit" variant="primary" disabled={submitting} className="w-full">
+            {submitting ? 'Logging in…' : 'Log in'}
+          </Button>
+        </form>
+        <p className="mt-4 text-sm text-muted">
+          No account? <Link to="/register">Register</Link>
+        </p>
+      </Card>
     </div>
   )
 }

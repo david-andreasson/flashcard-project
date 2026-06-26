@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { getProgress, type Progress } from '../lib/study'
+import { Alert } from './ui'
 
 export function ProgressPage() {
   const [progress, setProgress] = useState<Progress | null>(null)
@@ -11,8 +12,8 @@ export function ProgressPage() {
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load progress'))
   }, [])
 
-  if (error) return <p role="alert" style={{ color: 'crimson', padding: '1rem' }}>{error}</p>
-  if (!progress) return <p style={{ padding: '1rem' }}>Loading…</p>
+  if (error) return <Alert tone="danger">{error}</Alert>
+  if (!progress) return <p className="text-muted">Loading…</p>
 
   const stats = [
     { label: 'Due now', value: progress.dueNow },
@@ -21,17 +22,14 @@ export function ProgressPage() {
   ]
 
   return (
-    <div style={{ maxWidth: 640 }}>
-      <h1>Progress</h1>
-      <p style={{ color: '#888' }}>Your spaced-repetition status across all decks.</p>
-      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap', marginTop: '1rem' }}>
+    <div>
+      <h1 className="text-2xl font-medium text-ink">Progress</h1>
+      <p className="mt-1 text-muted">Your spaced-repetition status across all decks.</p>
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
         {stats.map((s) => (
-          <div
-            key={s.label}
-            style={{ border: '1px solid #ccc', borderRadius: 10, padding: '1.25rem 2rem', textAlign: 'center', minWidth: 130 }}
-          >
-            <div style={{ fontSize: '2rem', fontWeight: 700 }}>{s.value}</div>
-            <div style={{ color: '#888' }}>{s.label}</div>
+          <div key={s.label} className="rounded-xl border border-line bg-surface p-5 text-center">
+            <div className="text-3xl font-medium text-ink">{s.value}</div>
+            <div className="mt-1 text-sm text-muted">{s.label}</div>
           </div>
         ))}
       </div>

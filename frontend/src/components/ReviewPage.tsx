@@ -1,13 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { getDueCards, reviewCard, type Grade } from '../lib/study'
 import type { Card } from '../lib/courses'
+import { Alert, Button } from './ui'
 
-const GRADES: { grade: Grade; label: string; color: string }[] = [
-  { grade: 'AGAIN', label: 'Again', color: 'crimson' },
-  { grade: 'HARD', label: 'Hard', color: '#b58900' },
-  { grade: 'GOOD', label: 'Good', color: '#268bd2' },
-  { grade: 'EASY', label: 'Easy', color: 'green' },
+const GRADES: { grade: Grade; label: string; className: string }[] = [
+  { grade: 'AGAIN', label: 'Again', className: 'text-danger' },
+  { grade: 'HARD', label: 'Hard', className: 'text-muted' },
+  { grade: 'GOOD', label: 'Good', className: 'text-accent' },
+  { grade: 'EASY', label: 'Easy', className: 'text-success' },
 ]
 
 export function ReviewPage() {
@@ -55,27 +56,31 @@ export function ReviewPage() {
 
   if (error && !queue) {
     return (
-      <div style={{ maxWidth: 640 }}>
-        <h1>Can't review this deck</h1>
-        <p role="alert" style={{ color: 'crimson' }}>{error}</p>
-        <button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)}>Back to deck</button>
+      <div>
+        <h1 className="text-2xl font-medium text-ink">Can't review this deck</h1>
+        <div className="mt-3">
+          <Alert tone="danger">{error}</Alert>
+        </div>
+        <Button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)} className="mt-4">
+          Back to deck
+        </Button>
       </div>
     )
   }
-  if (!queue) return <p style={{ padding: '1rem' }}>Loading…</p>
+  if (!queue) return <p className="text-muted">Loading…</p>
 
   if (queue.length === 0) {
     return (
-      <div style={{ maxWidth: 640 }}>
-        <h1>{reviewed > 0 ? 'Review complete' : 'Nothing due'}</h1>
-        <p style={{ color: '#888' }}>
+      <div>
+        <h1 className="text-2xl font-medium text-ink">{reviewed > 0 ? 'Review complete' : 'Nothing due'}</h1>
+        <p className="mt-2 text-muted">
           {reviewed > 0
             ? `Reviewed ${reviewed} card${reviewed === 1 ? '' : 's'}.`
             : 'No cards are due in this deck right now.'}
         </p>
-        <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-          <button onClick={load}>Refresh</button>
-          <button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)}>Back to deck</button>
+        <div className="mt-4 flex gap-2">
+          <Button onClick={load}>Refresh</Button>
+          <Button onClick={() => navigate(`/courses/${cId}/decks/${dId}`)}>Back to deck</Button>
         </div>
       </div>
     )
@@ -83,50 +88,48 @@ export function ReviewPage() {
 
   const card = queue[0]
   return (
-    <div style={{ maxWidth: 640 }}>
-      <div style={{ color: '#888', fontSize: '0.85rem', marginBottom: '0.5rem' }}>
+    <div>
+      <Link
+        to={`/courses/${cId}`}
+        className="mb-3 inline-block text-sm text-muted no-underline hover:text-ink"
+      >
+        ← Back to course
+      </Link>
+      <div className="mb-2 text-sm text-muted">
         {queue.length} due · {reviewed} reviewed
       </div>
-      <div
-        style={{
-          border: '1px solid #ccc',
-          borderRadius: 10,
-          padding: '2rem',
-          minHeight: 160,
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          justifyContent: 'center',
-          textAlign: 'center',
-        }}
-      >
-        <div style={{ fontSize: '1.5rem', fontWeight: 600 }}>{card.front}</div>
+      <div className="flex min-h-40 flex-col items-center justify-center rounded-xl border border-line bg-surface p-8 text-center">
+        <div className="text-2xl font-medium text-ink">{card.front}</div>
         {showBack && (
           <>
-            <hr style={{ width: '100%', margin: '1.25rem 0', border: 0, borderTop: '1px solid #ddd' }} />
-            <div style={{ fontSize: '1.3rem' }}>{card.back}</div>
-            {card.notes && <div style={{ color: '#888', marginTop: '0.5rem' }}>{card.notes}</div>}
+            <hr className="my-5 w-full border-0 border-t border-line" />
+            <div className="text-xl text-ink">{card.back}</div>
+            {card.notes && <div className="mt-2 text-muted">{card.notes}</div>}
           </>
         )}
       </div>
 
-      {error && <p role="alert" style={{ color: 'crimson', marginTop: '0.5rem' }}>{error}</p>}
+      {error && (
+        <p role="alert" className="mt-2 text-sm text-danger">
+          {error}
+        </p>
+      )}
 
-      <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center', gap: '0.5rem' }}>
+      <div className="mt-4 flex flex-wrap justify-center gap-2">
         {!showBack ? (
-          <button onClick={() => setShowBack(true)} style={{ padding: '0.6rem 1.5rem' }}>
+          <Button variant="primary" onClick={() => setShowBack(true)} className="px-6">
             Show answer
-          </button>
+          </Button>
         ) : (
           GRADES.map((g) => (
-            <button
+            <Button
               key={g.grade}
               onClick={() => grade(g.grade)}
               disabled={submitting}
-              style={{ padding: '0.6rem 1.1rem', color: g.color }}
+              className={`px-5 ${g.className}`}
             >
               {g.label}
-            </button>
+            </Button>
           ))
         )}
       </div>

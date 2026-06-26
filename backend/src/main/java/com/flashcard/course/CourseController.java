@@ -53,7 +53,11 @@ public class CourseController {
         var result = "public".equalsIgnoreCase(scope)
                 ? courseService.listPublic(pageable)
                 : courseService.listMine(principal.id(), pageable);
-        return PagedResponse.from(result.map(CourseResponse::from));
+        var counts = courseService.countsFor(result.getContent().stream().map(Course::getId).toList());
+        return PagedResponse.from(result.map(c -> {
+            long[] cc = counts.getOrDefault(c.getId(), new long[2]);
+            return CourseResponse.from(c, cc[0], cc[1]);
+        }));
     }
 
     @PutMapping("/{id}")

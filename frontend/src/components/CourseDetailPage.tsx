@@ -13,6 +13,7 @@ import {
   type Deck,
   type PagedResponse,
 } from '../lib/courses'
+import { Alert, Button, Input } from './ui'
 
 export function CourseDetailPage() {
   const { id } = useParams()
@@ -45,12 +46,14 @@ export function CourseDetailPage() {
   if (notFound) {
     return (
       <div>
-        <h1>Course not found</h1>
-        <button onClick={() => navigate('/courses')}>Back to courses</button>
+        <h1 className="text-2xl font-medium text-ink">Course not found</h1>
+        <Button onClick={() => navigate('/courses')} className="mt-4">
+          Back to courses
+        </Button>
       </div>
     )
   }
-  if (!course) return <p style={{ padding: '1rem' }}>Loading…</p>
+  if (!course) return <p className="text-muted">Loading…</p>
 
   async function onAddDeck(event: FormEvent) {
     event.preventDefault()
@@ -108,51 +111,90 @@ export function CourseDetailPage() {
   }
 
   return (
-    <div style={{ maxWidth: 640 }}>
-      <button onClick={() => navigate('/courses')} style={{ marginBottom: '1rem' }}>← Courses</button>
+    <div>
+      <Button onClick={() => navigate('/courses')} variant="ghost" className="mb-4 px-2 py-1">
+        ← Courses
+      </Button>
 
       {editingTitle === null ? (
-        <h1>
+        <h1 className="text-2xl font-medium text-ink">
           {course.title}
           {course.visibility === 'PUBLIC' && (
-            <span style={{ marginLeft: '0.5rem', fontSize: '0.8rem', color: '#888' }}>· public</span>
+            <span className="ml-2 text-sm text-muted">· public</span>
           )}
         </h1>
       ) : (
-        <form onSubmit={onSaveTitle} style={{ display: 'flex', gap: '0.5rem' }}>
-          <input value={editingTitle} onChange={(e) => setEditingTitle(e.target.value)} required
-            style={{ flex: 1, padding: '0.4rem' }} />
-          <button type="submit">Save</button>
-          <button type="button" onClick={() => setEditingTitle(null)}>Cancel</button>
+        <form onSubmit={onSaveTitle} className="flex gap-2">
+          <Input value={editingTitle} onChange={(e) => setEditingTitle(e.target.value)} required className="flex-1" />
+          <Button type="submit" variant="primary">
+            Save
+          </Button>
+          <Button type="button" onClick={() => setEditingTitle(null)}>
+            Cancel
+          </Button>
         </form>
       )}
 
-      {error && <p role="alert" style={{ color: 'crimson' }}>{error}</p>}
-
-      {isOwner && editingTitle === null && (
-        <div style={{ display: 'flex', gap: '0.5rem', marginBottom: '1rem' }}>
-          <button onClick={() => setEditingTitle(course.title)}>Edit title</button>
-          <button onClick={onDeleteCourse} style={{ color: 'crimson' }}>Delete course</button>
+      {error && (
+        <div className="mt-3">
+          <Alert tone="danger">{error}</Alert>
         </div>
       )}
 
-      <h2>Decks</h2>
-      {decks && decks.content.length === 0 && <p style={{ color: '#888' }}>No decks yet.</p>}
-      <ul style={{ listStyle: 'none', padding: 0 }}>
+      {isOwner && editingTitle === null && (
+        <div className="mt-3 flex gap-2">
+          <Button onClick={() => setEditingTitle(course.title)} className="px-3 py-1.5">
+            Edit title
+          </Button>
+          <Button onClick={onDeleteCourse} className="px-3 py-1.5 text-danger">
+            Delete course
+          </Button>
+        </div>
+      )}
+
+      <h2 className="mt-8 text-lg font-medium text-ink">Decks</h2>
+      {decks && decks.content.length === 0 && <p className="mt-2 text-muted">No decks yet.</p>}
+      <ul className="mt-2 list-none p-0">
         {decks?.content.map((deck) => (
-          <li key={deck.id} style={{ display: 'flex', gap: '0.5rem', alignItems: 'center', padding: '0.3rem 0' }}>
-            <Link to={`/courses/${courseId}/decks/${deck.id}`} style={{ flex: 1 }}>{deck.title}</Link>
-            {isOwner && <button onClick={() => onRenameDeck(deck)}>Rename</button>}
-            {isOwner && <button onClick={() => onDeleteDeck(deck)} style={{ color: 'crimson' }}>Delete</button>}
+          <li key={deck.id} className="flex flex-wrap items-center gap-2 border-b border-line py-2">
+            <Link
+              to={`/courses/${courseId}/decks/${deck.id}/study`}
+              className="flex-1 font-medium no-underline hover:underline"
+            >
+              {deck.title}
+            </Link>
+            <Link
+              to={`/courses/${courseId}/decks/${deck.id}`}
+              className="rounded-lg border border-line px-3 py-1.5 text-sm text-ink no-underline hover:border-accent hover:no-underline"
+            >
+              {isOwner ? 'Edit' : 'Cards'}
+            </Link>
+            {isOwner && (
+              <Button onClick={() => onRenameDeck(deck)} className="px-3 py-1.5">
+                Rename
+              </Button>
+            )}
+            {isOwner && (
+              <Button onClick={() => onDeleteDeck(deck)} className="px-3 py-1.5 text-danger">
+                Delete
+              </Button>
+            )}
           </li>
         ))}
       </ul>
 
       {isOwner && (
-        <form onSubmit={onAddDeck} style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
-          <input value={newDeckTitle} onChange={(e) => setNewDeckTitle(e.target.value)}
-            placeholder="New deck title" required style={{ flex: 1, padding: '0.5rem' }} />
-          <button type="submit">Add deck</button>
+        <form onSubmit={onAddDeck} className="mt-4 flex gap-2">
+          <Input
+            value={newDeckTitle}
+            onChange={(e) => setNewDeckTitle(e.target.value)}
+            placeholder="New deck title"
+            required
+            className="flex-1"
+          />
+          <Button type="submit" variant="primary">
+            Add deck
+          </Button>
         </form>
       )}
     </div>
